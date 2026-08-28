@@ -1,0 +1,51 @@
+date,amount,category,description,type
+2026-08-01,450,Food,Swiggy lunch order,expense
+2026-08-01,450,Food,Swiggy lunch order,expense
+2026-08-02,300,Transport,Uber city commute,expense
+2026-08-02,1250,Groceries,Supermarket supplies,expense
+2026-08-03,850,Shopping,Amazon stationery,expense
+2026-08-03,350,Food,Coffee with team,expense
+2026-08-04,1200,Utilities,Broadband Internet bill,expense
+2026-08-05,55000,Salary,Monthly Salary Credit,income
+2026-08-05,450,Food,Zomato dinner,expense
+2026-08-06,18500,Shopping,Designer Luxury Watch,expense
+2026-08-07,650,Transport,Fuel Petrol refuel,expense
+2026-08-07,1100,Entertainment,Weekend cinema tickets,expense
+2026-08-08,2400,Utilities,Electricity bill,expense
+2026-08-09,450,Food,Lunch wrap,expense
+2026-08-10,1500,Healthcare,Pharmacy medicines,expense
+2026-08-10,3000,Freelance,Consulting milestone payment,income
+2026-08-11,900,Groceries,Organic vegetables,expense
+2026-08-12,750,Food,Pizza dinner,expense
+2026-08-12,750,Food,Pizza dinner,expense
+2026-08-13,400,Transport,Metro smart card recharge,expense
+2026-08-14,1800,Shopping,Running shoes,expense
+2026-08-15,600,Entertainment,Streaming subscription,expense
+2026-08-15,1200,Food,Family dinner,expense
+2026-08-16,2500,Education,Online course certificate,expense
+2026-08-17,350,Food,Bakery snacks,expense
+2026-08-18,1600,Groceries,Weekly grocery store,expense
+2026-08-19,500,Transport,Cab ride,expense
+2026-08-20,8000,Investments,Mutual Fund SIP,expense
+2026-08-20,2000,Dividends,Stock dividend yield,income
+2026-08-21,450,Food,Subway lunch,expense
+2026-08-22,1300,Shopping,Home decor lamp,expense
+2026-08-22,650,Transport,Fuel fill,expense
+2026-08-23,950,Food,Brunch cafe,expense
+2026-08-24,1500,Utilities,Mobile postpaid bill,expense
+2026-08-25,350,Food,Juice bar,expense
+2026-08-25,1200,Shopping,Cookware item,expense
+2026-08-26,22000,Electronics,New Smartphone Upgrade,expense
+2026-08-27,400,Transport,Taxi commute,expense
+2026-08-27,1100,Groceries,Supermart items,expense
+2026-08-28,850,Food,Dinner with friends,expense
+2026-08-28,850,Food,Dinner with friends,expense
+2026-08-29,1500,Entertainment,Concert entry passes,expense
+2026-08-29,700,Transport,Airport cab,expense
+2026-08-30,5000,Bonus,Quarterly performance bonus,income
+2026-08-30,2800,Groceries,Monthly bulk pantry restock,expense
+2026-08-31,1200,Food,Month-end celebration meal,expense
+2026-08-31,600,Utilities,Water utility bill,expense
+2026-08-31,1500,Savings,Emergency fund deposit,expense
+2026-08-31,450,Transport,City train pass,expense
+2026-08-31,300,Food,Coffee & pastry,expense

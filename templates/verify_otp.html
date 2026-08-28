@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP - ExpensesIQ</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-cards-center">
+    <div class="verify-otp-card">
+      <div class="card-icon verify-icon">✉️</div>
+      
+      <h1>Verify OTP</h1>
+      <p class="card-subtitle">Enter the 6-digit code sent to your email to verify your account</p>
+
+      {% if error %}
+      <div class="error-message">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" class="password-form">
+        <div class="form-group">
+          <label for="otp">One-Time Password (OTP)</label>
+          <input id="otp" name="otp" type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required>
+          <small>OTP is valid for 10 minutes</small>
+        </div>
+
+        <button type="submit" class="form-btn primary">Verify OTP</button>
+      </form>
+
+      <div class="form-footer">
+        <p><a href="/forgot-password">Back to Forgot Password</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

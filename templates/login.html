@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - ExpenseAuditor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-left">
+      <div class="auth-illustration">
+        <div class="wallet-illust">📊</div>
+      </div>
+      <h2>ExpenseAuditor</h2>
+      <p>AI-Powered Spending Pattern Analyser & Anomaly Auditor for Personal & Business finances.</p>
+      <div class="features-list">
+        <div class="feature-item">✓ Automated Role-Based Dashboards</div>
+        <div class="feature-item">✓ Statistical Anomaly & Duplicate Detection</div>
+        <div class="feature-item">✓ Monthly P&L and Savings Breakdown</div>
+        <div class="feature-item">✓ Exactly 3 Personalised AI Recommendations</div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-card">
+        <div class="auth-logo">ExpenseAuditor</div>
+        <h1>Sign In</h1>
+        <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 20px;">Access your personal or business financial audit</p>
+
+        <form method="post" class="auth-form">
+          <div class="form-group">
+            <label for="username">Email or Username</label>
+            <input id="username" name="username" type="text" placeholder="Enter your email or username" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Enter your password" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="auth-btn">Sign In to Dashboard</button>
+        </form>
+
+        <div class="auth-footer">
+          <p><a href="/forgot-password">Forgot password?</a></p>
+          <p>Don't have an account? <a href="/register">Create Account</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

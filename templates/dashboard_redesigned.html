@@ -1,0 +1,704 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Dashboard - ExpenseAuditor{% endblock %}
+{% block page_title %}Personal Spending Auditor{% endblock %}
+
+{% block extra_css %}
+<style>
+  .badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-high {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+  .badge-medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+  }
+  .badge-moderate {
+    background: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+  }
+  .ai-badge {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .ai-recommendation-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .ai-recommendation-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+  }
+  .ai-card-title {
+    font-weight: 700;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .ai-card-advice {
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+  .ai-card-action {
+    font-size: 0.82rem;
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: inline-block;
+  }
+  .anomaly-table, .duplicate-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  .anomaly-table th, .duplicate-table th {
+    background: var(--surface-soft);
+    padding: 10px 12px;
+    text-align: left;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .anomaly-table td, .duplicate-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text);
+  }
+  .csv-banner {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(56, 189, 248, 0.15));
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 16px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .savings-rate-pill {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+  <!-- CSV Import Quick Action Banner -->
+  <div class="csv-banner">
+    <div>
+      <h3 style="margin: 0; font-size: 1.1rem; color: #ffffff;">📁 Audit Spending with 50+ CSV Transactions</h3>
+      <p style="margin: 4px 0 0 0; color: var(--muted); font-size: 0.85rem;">Upload monthly bank statements or personal ledger CSVs for instant AI pattern analysis.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="/download-sample-csv" class="btn btn-secondary btn-sm" style="text-decoration: none;">📥 Sample CSV</a>
+      <a href="/upload-csv" class="btn btn-primary btn-sm" style="text-decoration: none;">🚀 Upload CSV File</a>
+    </div>
+  </div>
+
+  <!-- Section 1: KPI Metrics Cards (4 Columns) -->
+  <section class="dashboard-section metrics-section">
+    <div class="metrics-row" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+      
+      <!-- Total Income Card -->
+      <div class="metric-card income-card">
+        <div class="metric-header">
+          <h3 class="metric-title">Total Income</h3>
+          <span class="metric-period">All-Time / Filtered</span>
+        </div>
+        <div class="metric-icon">📈</div>
+        <div class="metric-value">₹{{ total_income|default(0) }}</div>
+        <div class="metric-footer">
+          <span class="metric-label">Inflows & Salary</span>
+        </div>
+      </div>
+
+      <!-- Total Expenses Card -->
+      <div class="metric-card expense-card">
+        <div class="metric-header">
+          <h3 class="metric-title">Total Expenses</h3>
+          <span class="metric-period">All-Time / Filtered</span>
+        </div>
+        <div class="metric-icon">📉</div>
+        <div class="metric-value">₹{{ total_expense|default(0) }}</div>
+        <div class="metric-footer">
+          <span class="metric-label">Daily Limit: ₹{{ member_limit|default(1000) }}</span>
+        </div>
+      </div>
+
+      <!-- Net Balance Card -->
+      <div class="metric-card savings-card">
+        <div class="metric-header">
+          <h3 class="metric-title">Net Balance</h3>
+          <span class="metric-period">Available Savings</span>
+        </div>
+        <div class="metric-icon">💰</div>
+        <div class="metric-value {% if net_balance|default(0) < 0 %}negative{% endif %}">₹{{ net_balance|default(0) }}</div>
+        <div class="metric-footer">
+          <span class="metric-label">{% if net_balance|default(0) >= 0 %}Positive Reserves{% else %}Deficit Alert{% endif %}</span>
+        </div>
+      </div>
+
+      <!-- Savings Rate Card -->
+      <div class="metric-card" style="border-left: 4px solid var(--accent);">
+        <div class="metric-header">
+          <h3 class="metric-title">Savings Rate</h3>
+          <span class="savings-rate-pill">{{ savings_rate|default(0) }}%</span>
+        </div>
+        <div class="metric-icon">🎯</div>
+        <div class="metric-value" style="color: var(--accent);">{{ savings_rate|default(0) }}%</div>
+        <div class="metric-footer">
+          <span class="metric-label">Target Benchmark: 20%+</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section 2: AI Recommendations & Monthly Summary (2 Columns) -->
+  <section class="dashboard-section">
+    <div class="charts-row">
+      
+      <!-- AI Recommendations Card (Exactly 3 Recommendations) -->
+      <div class="card" style="border: 1px solid rgba(99, 102, 241, 0.4);">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 class="card-title">🤖 AI Spending Recommendations</h2>
+          <span class="ai-badge">{{ 'Live Ollama AI' if ai_available else 'Rule Engine' }}</span>
+        </div>
+        
+        {% if ai_status_message %}
+          <div style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; color: var(--muted); margin-bottom: 14px;">
+            ℹ️ {{ ai_status_message }}
+          </div>
+        {% endif %}
+
+        <div class="ai-recommendations-list">
+          {% if recommendations %}
+            {% for rec in recommendations %}
+              <div class="ai-recommendation-card">
+                <div class="ai-card-title">
+                  <span>{{ loop.index }}. {{ rec.title }}</span>
+                  <span class="badge badge-moderate">{{ rec.category }}</span>
+                </div>
+                <div class="ai-card-advice">{{ rec.advice }}</div>
+                <div class="ai-card-action">💡 Action: {{ rec.action }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p style="color: var(--muted); text-align: center; padding: 20px;">No recommendations available yet. Add transactions or upload a CSV to generate spending insights.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Monthly Financial Summary & Filter -->
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <h2 class="card-title">📅 Monthly Financial Summary</h2>
+          <form method="get" action="/personal/dashboard" style="display: flex; align-items: center; gap: 8px;">
+            <select name="month" class="form-input select-input" style="padding: 4px 10px; font-size: 0.85rem;" onchange="this.form.submit()">
+              <option value="current" {% if selected_month == 'current' %}selected{% endif %}>Current Month</option>
+              <option value="all" {% if selected_month == 'all' %}selected{% endif %}>All Months</option>
+              {% for m in available_months %}
+                <option value="{{ m.value }}" {% if selected_month == m.value %}selected{% endif %}>{{ m.label }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+
+        <div style="padding: 10px 0;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div style="background: var(--surface-soft); padding: 12px; border-radius: 10px;">
+              <span style="color: var(--muted); font-size: 0.8rem;">Month Total Inflow</span>
+              <div style="font-size: 1.3rem; font-weight: 700; color: var(--success);">₹{{ monthly_summary.total_income|default(0) }}</div>
+            </div>
+            <div style="background: var(--surface-soft); padding: 12px; border-radius: 10px;">
+              <span style="color: var(--muted); font-size: 0.8rem;">Month Total Outflow</span>
+              <div style="font-size: 1.3rem; font-weight: 700; color: var(--danger);">₹{{ monthly_summary.total_expenses|default(0) }}</div>
+            </div>
+          </div>
+
+          <table style="width: 100%; font-size: 0.9rem; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 8px 0; color: var(--muted);">Net Monthly Savings</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 700; color: {{ 'var(--success)' if monthly_summary.net_savings >= 0 else 'var(--danger)' }};">
+                ₹{{ monthly_summary.net_savings|default(0) }}
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 8px 0; color: var(--muted);">Monthly Savings Rate</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 700; color: var(--accent);">
+                {{ monthly_summary.savings_rate|default(0) }}%
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 8px 0; color: var(--muted);">Highest Spending Category</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 600; color: var(--text);">
+                {{ monthly_summary.highest_category or 'N/A' }} (₹{{ monthly_summary.highest_category_amount|default(0) }})
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: var(--muted);">Audited Transactions</td>
+              <td style="padding: 8px 0; text-align: right; font-weight: 600; color: var(--text);">
+                {{ monthly_summary.transaction_count|default(0) }} records
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section 3: Spending Breakdown & Top 5 Categories -->
+  <section class="dashboard-section">
+    <div class="charts-row">
+      
+      <!-- Top 5 Categories Breakdown -->
+      <div class="card list-card">
+        <div class="card-header">
+          <h2 class="card-title">📊 Top 5 Spending Categories</h2>
+        </div>
+
+        <div class="categories-list">
+          {% if top_5_categories %}
+            {% for item in top_5_categories %}
+              <div class="category-row" style="margin-bottom: 14px;">
+                <div class="category-info">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span class="category-name" style="font-weight: 600;">#{{ item.rank }} {{ item.category }} ({{ item.count }} txns)</span>
+                    <span style="font-weight: 700; color: var(--text);">₹{{ item.total_amount }} ({{ item.percentage }}%)</span>
+                  </div>
+                  <div class="category-bar" style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div class="category-fill" style="width: {{ item.percentage }}%; height: 100%; background: linear-gradient(90deg, #6366f1, #38bdf8); border-radius: 4px;"></div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-icon">📂</div>
+              <p>No spending categories yet</p>
+              <p class="empty-hint">Add transactions or upload CSV to see Top 5 categories.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Expense Overview Donut Chart -->
+      <div class="card chart-card">
+        <div class="card-header">
+          <h2 class="card-title">🥧 Spending Distribution</h2>
+        </div>
+        <div class="chart-container" style="position: relative; height: 260px;">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section 4: Unusual Transactions (IQR Anomaly Detection) & Potential Duplicates -->
+  <section class="dashboard-section">
+    <div class="charts-row">
+      
+      <!-- Potentially Unusual Transactions -->
+      <div class="card list-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 class="card-title">⚠️ Unusual Transactions (IQR Anomaly Detection)</h2>
+          <span class="badge badge-high">{{ unusual_transactions|length }} Flagged</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+          {% if unusual_transactions %}
+            <table class="anomaly-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Amount</th>
+                  <th>Severity</th>
+                  <th>Explanation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for anom in unusual_transactions[:6] %}
+                  <tr>
+                    <td>{{ anom.date }}</td>
+                    <td><span class="badge badge-moderate">{{ anom.category }}</span></td>
+                    <td style="font-weight: 700; color: #ef4444;">₹{{ anom.amount }}</td>
+                    <td>
+                      <span class="badge {{ 'badge-high' if anom.severity == 'High' else ('badge-medium' if anom.severity == 'Medium' else 'badge-moderate') }}">
+                        {{ anom.severity }}
+                      </span>
+                    </td>
+                    <td style="font-size: 0.8rem; color: var(--muted); max-width: 260px;">{{ anom.reason }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div class="empty-state" style="padding: 24px;">
+              <div class="empty-icon">✓</div>
+              <p style="color: var(--success); font-weight: 600;">No statistical anomalies detected</p>
+              <p class="empty-hint">All expenses fall within standard Interquartile Range baselines.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Duplicate Transactions Review -->
+      <div class="card list-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 class="card-title">🔍 Potential Duplicate Transactions</h2>
+          <span class="badge badge-medium">{{ duplicate_transactions|length }} Groups</span>
+        </div>
+
+        <div style="overflow-x: auto;">
+          {% if duplicate_transactions %}
+            <table class="duplicate-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Amount</th>
+                  <th>Duplicates</th>
+                  <th>Potential Excess</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for dup in duplicate_transactions[:6] %}
+                  <tr>
+                    <td>{{ dup.date }}</td>
+                    <td>{{ dup.category }}</td>
+                    <td style="font-weight: 600;">₹{{ dup.amount }}</td>
+                    <td><span class="badge badge-medium">{{ dup.count }}x identical</span></td>
+                    <td style="color: #f59e0b; font-weight: 700;">₹{{ dup.excess_potential }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div class="empty-state" style="padding: 24px;">
+              <div class="empty-icon">✓</div>
+              <p style="color: var(--success); font-weight: 600;">No duplicate transactions detected</p>
+              <p class="empty-hint">All transaction dates and amounts appear unique.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section 5: Monthly Trends Chart -->
+  <section class="dashboard-section">
+    <div class="card chart-card">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap;">
+        <h2 class="card-title">📈 Monthly Income vs Expense Trends</h2>
+        <form method="get" class="trend-date-form" style="display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap;">
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label" for="trend-date-from">From</label>
+            <input class="form-input" id="trend-date-from" name="date_from" type="date" value="{{ filter_from|default('') }}">
+          </div>
+          <div class="form-group" style="margin: 0;">
+            <label class="form-label" for="trend-date-to">To</label>
+            <input class="form-input" id="trend-date-to" name="date_to" type="date" value="{{ filter_to|default('') }}">
+          </div>
+          <button type="submit" class="btn btn-primary">Apply</button>
+          {% if filter_from or filter_to %}
+            <a href="{{ url_for('personal_dashboard') }}" class="btn btn-secondary">Clear</a>
+          {% endif %}
+        </form>
+      </div>
+      <div class="chart-container" style="position: relative; height: 260px;">
+        <canvas id="trendsChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Quick Actions & Loggers (Preserved features) -->
+  <section class="dashboard-section">
+    <div class="actions-row">
+      
+      <!-- Add Transaction Card -->
+      <div class="card action-card">
+        <div class="card-header">
+          <h2 class="card-title">💳 Quick Add Transaction</h2>
+        </div>
+        <form method="post" class="action-form">
+          <input type="hidden" name="action" value="transaction">
+          
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-input select-input" name="type" id="type">
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Amount (₹)</label>
+            <input class="form-input" id="amount" name="amount" type="number" step="0.01" placeholder="₹ 0.00" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input class="form-input" id="transaction_date" name="transaction_date" type="date" value="{{ today_date }}">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-input select-input" id="category" name="category" required>
+              <option value="" disabled selected>Select category</option>
+              <option>Food</option>
+              <option>Groceries</option>
+              <option>Transportation</option>
+              <option>Healthcare</option>
+              <option>Education</option>
+              <option>Rent</option>
+              <option>Utilities</option>
+              <option>Entertainment</option>
+              <option>Shopping</option>
+              <option>Travel</option>
+              <option>Salary</option>
+              <option>Freelance</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description / Note</label>
+            <input class="form-input" id="note" name="note" type="text" placeholder="e.g., Grocery store purchase">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">Save Transaction</button>
+        </form>
+      </div>
+
+      <!-- Set Financial Goal Card -->
+      <div class="card action-card">
+        <div class="card-header">
+          <h2 class="card-title">🎯 Set Goal</h2>
+        </div>
+        <form method="post" class="action-form">
+          <input type="hidden" name="action" value="goal">
+
+          <div class="form-group">
+            <label class="form-label">Goal Name</label>
+            <input class="form-input" id="title" name="title" type="text" placeholder="e.g., Emergency Fund" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Amount (₹)</label>
+            <input class="form-input" id="target" name="target" type="number" step="0.01" placeholder="₹ 0.00" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Current Savings (₹)</label>
+            <input class="form-input" id="saved" name="saved" type="number" step="0.01" value="0" placeholder="₹ 0.00">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Date</label>
+            <input class="form-input" id="due_date" name="due_date" type="date" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">Create Goal</button>
+        </form>
+      </div>
+
+      <!-- Daily Spending Limit Card -->
+      <div class="card action-card">
+        <div class="card-header">
+          <h2 class="card-title">📌 Daily Limit</h2>
+        </div>
+        <div class="limit-display" style="text-align: center; padding: 16px 0;">
+          <div class="limit-value" style="font-size: 2rem; font-weight: 800; color: var(--primary);">₹{{ member_limit|default(1000) }}</div>
+          <div class="limit-label" style="color: var(--muted); font-size: 0.85rem;">Configured Daily Limit</div>
+        </div>
+
+        <form method="post" class="action-form">
+          <input type="hidden" name="action" value="set_limit">
+
+          <div class="form-group">
+            <label class="form-label">New Limit (₹)</label>
+            <input class="form-input" id="daily_limit" name="daily_limit" type="number" step="0.01" placeholder="₹ 0.00" value="{{ member_limit|default(1000) }}" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">Update Limit</button>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section 7: Recent Transactions Table -->
+  <section class="dashboard-section">
+    <div class="card list-card">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 class="card-title">📋 Recent Transactions</h2>
+        <a href="{{ url_for('transactions_page') }}" class="link-view-all">View All Transactions →</a>
+      </div>
+
+      <div class="transactions-list">
+        {% if transactions %}
+          {% for trx in transactions %}
+          <div class="transaction-row" style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 1.2rem;">{% if trx.type == 'expense' %}📉{% else %}📈{% endif %}</span>
+              <div>
+                <div style="font-weight: 600; color: var(--text);">{{ trx.category or 'General' }} <span style="font-size: 0.8rem; color: var(--muted);">({{ trx.note or 'No description' }})</span></div>
+                <div style="font-size: 0.75rem; color: var(--muted);">{{ trx.date }}</div>
+              </div>
+            </div>
+            <div style="font-weight: 700; color: {{ '#ef4444' if trx.type == 'expense' else '#22c55e' }};">
+              {% if trx.type == 'expense' %}-{% else %}+{% endif %}₹{{ trx.amount }}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state" style="padding: 24px;">
+            <div class="empty-icon">💼</div>
+            <p>No transactions yet</p>
+            <p class="empty-hint">Start by adding your first transaction or uploading a CSV.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Daily Limit Alert Popup Modal -->
+<div id="dailyLimitModal" class="modal" aria-hidden="true">
+  <div class="modal-content alert-modal">
+    <div class="modal-header">
+      <h2>⚠️ Daily Spending Alert</h2>
+      <button class="modal-close" onclick="closeDailyLimitAlert()">&times;</button>
+    </div>
+    <div class="modal-body" style="text-align: center; padding: 20px;">
+      <div style="font-size: 48px; margin-bottom: 12px;">💰</div>
+      <p style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">Daily Spending Limit Exceeded!</p>
+      <div style="background: var(--surface-soft); padding: 16px; border-radius: 12px; margin: 16px 0;">
+        <div style="margin-bottom: 8px;">
+          <span style="color: var(--muted); font-size: 0.85rem;">Today's Spending:</span>
+          <span style="font-size: 1.4rem; font-weight: 800; color: var(--danger); margin-left: 8px;">₹{{ today_expense|default(0) }}</span>
+        </div>
+        <div>
+          <span style="color: var(--muted); font-size: 0.85rem;">Daily Limit:</span>
+          <span style="font-size: 1.4rem; font-weight: 800; color: var(--success); margin-left: 8px;">₹{{ member_limit|default(1000) }}</span>
+        </div>
+      </div>
+      <p style="color: var(--muted); font-size: 0.85rem;">Consider adjusting your daily limit or reviewing recent transactions.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDailyLimitAlert()">Dismiss</button>
+      <button class="btn btn-primary" onclick="closeDailyLimitAlert()">Understood</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function checkDailyLimit() {
+    const todayExpense = {{ today_expense|default(0) }};
+    const dailyLimit = {{ member_limit|default(1000) }};
+    const dailyLimitModal = document.getElementById('dailyLimitModal');
+    
+    if (dailyLimitModal && todayExpense > dailyLimit) {
+      dailyLimitModal.classList.add('show');
+      dailyLimitModal.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function closeDailyLimitAlert() {
+    const dailyLimitModal = document.getElementById('dailyLimitModal');
+    if (dailyLimitModal) {
+      dailyLimitModal.classList.remove('show');
+      dailyLimitModal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    checkDailyLimit();
+
+    // Initialize Donut Chart
+    {% if chart_data %}
+    const ctx = document.getElementById('categoryChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {{ chart_data|safe }},
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } }
+          }
+        }
+      });
+    }
+    {% endif %}
+
+    // Initialize Trends Chart
+    {% if trends_data %}
+    const trendsCtx = document.getElementById('trendsChart');
+    if (trendsCtx) {
+      new Chart(trendsCtx, {
+        type: 'line',
+        data: {{ trends_data|safe }},
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { color: '#94a3b8' } }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true,
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#94a3b8' }
+            },
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#94a3b8' }
+            }
+          }
+        }
+      });
+    }
+    {% endif %}
+  });
+</script>
+{% endblock %}

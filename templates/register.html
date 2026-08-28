@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - ExpenseAuditor</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .type-selector-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    .type-tab-btn {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .type-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    .type-tab-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .business-fields {
+      display: none;
+    }
+  </style>
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-left register-left">
+      <div class="auth-illustration register-illust">
+        <div class="checkmark-badge">🔍</div>
+      </div>
+      <h2>ExpenseAuditor</h2>
+      <p>AI-Powered Spending Pattern Analyser & Financial Intelligence.</p>
+      <div class="features-list">
+        <div class="feature-item">✓ 50+ CSV Transaction Auditing</div>
+        <div class="feature-item">✓ Automated IQR Anomaly Detection</div>
+        <div class="feature-item">✓ Duplicate Payment Prevention</div>
+        <div class="feature-item">✓ LangChain AI Cost Optimisation</div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-card register-card">
+        <div class="auth-logo">ExpenseAuditor</div>
+        <h1>Create Account</h1>
+        <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 20px;">Select your account type to get started</p>
+
+        <!-- Account Type Selector Tabs -->
+        <div class="type-selector-tabs">
+          <button type="button" class="type-tab-btn active" id="tabPersonal" onclick="selectType('personal')">
+            <span>👤</span> Personal User
+          </button>
+          <button type="button" class="type-tab-btn" id="tabBusiness" onclick="selectType('business')">
+            <span>🏢</span> Business User
+          </button>
+        </div>
+
+        <form method="post" class="auth-form" id="registerForm">
+          <input type="hidden" name="user_type" id="user_type" value="personal">
+
+          <div class="form-group">
+            <label for="username" id="nameLabel">Full Name</label>
+            <input id="username" name="username" placeholder="Enter your full name" required autocomplete="name">
+          </div>
+
+          <!-- Business Name Field (Shown only when Business is selected) -->
+          <div class="form-group business-fields" id="businessNameGroup">
+            <label for="business_name">Business / Company Name</label>
+            <input id="business_name" name="business_name" placeholder="e.g., Nexus Retail Enterprises">
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address (Gmail)</label>
+            <input id="email" name="email" type="email" placeholder="name@gmail.com" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input id="phone" name="phone" type="tel" placeholder="+91 98765 43210" autocomplete="tel">
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Min 8 chars (A-Z, a-z, 0-9, @$!%)" required autocomplete="new-password">
+          </div>
+
+          <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <input id="confirm_password" name="confirm_password" type="password" placeholder="Re-enter your password" required autocomplete="new-password">
+          </div>
+
+          <button type="submit" class="auth-btn" id="submitBtn">Create Personal Account</button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Already have an account? <a href="/login">Sign In</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function selectType(type) {
+      const typeInput = document.getElementById('user_type');
+      const tabPersonal = document.getElementById('tabPersonal');
+      const tabBusiness = document.getElementById('tabBusiness');
+      const nameLabel = document.getElementById('nameLabel');
+      const businessNameGroup = document.getElementById('businessNameGroup');
+      const businessNameInput = document.getElementById('business_name');
+      const submitBtn = document.getElementById('submitBtn');
+
+      typeInput.value = type;
+
+      if (type === 'business') {
+        tabPersonal.classList.remove('active');
+        tabBusiness.classList.add('active');
+        nameLabel.textContent = 'Owner / Primary Contact Name';
+        businessNameGroup.style.display = 'block';
+        businessNameInput.required = true;
+        submitBtn.textContent = 'Create Business Account';
+      } else {
+        tabBusiness.classList.remove('active');
+        tabPersonal.classList.add('active');
+        nameLabel.textContent = 'Full Name';
+        businessNameGroup.style.display = 'none';
+        businessNameInput.required = false;
+        submitBtn.textContent = 'Create Personal Account';
+      }
+    }
+  </script>
+</body>
+</html>

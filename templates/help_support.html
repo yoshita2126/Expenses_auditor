@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help & Support - Expense Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .support-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .support-card {
+      background: var(--surface);
+      border-radius: 26px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .support-card h3 {
+      font-size: 1.12rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    .support-card p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .faq-item {
+      margin-bottom: 16px;
+      padding: 16px;
+      background: var(--surface-soft);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .faq-item:hover {
+      background: var(--primary-soft);
+      transform: translateX(4px);
+    }
+    .faq-question {
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .faq-answer {
+      font-size: 0.9rem;
+      color: var(--muted);
+      display: none;
+    }
+    .faq-item.active .faq-answer {
+      display: block;
+    }
+    .support-link {
+      display: inline-block;
+      padding: 10px 16px;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    .support-link:hover {
+      background: var(--primary-strong);
+      transform: translateY(-2px);
+    }
+    .chat-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 26px;
+      display: flex;
+      flex-direction: column;
+      height: 600px;
+      box-shadow: var(--shadow);
+      grid-column: 1 / -1;
+    }
+    .chat-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+      color: white;
+      border-radius: 26px 26px 0 0;
+      font-weight: 700;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .message {
+      display: flex;
+      gap: 12px;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .message.user {
+      justify-content: flex-end;
+    }
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .message.bot .message-avatar {
+      background: var(--primary-soft);
+    }
+    .message.user .message-avatar {
+      background: var(--accent);
+    }
+    .message-content {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      word-wrap: break-word;
+    }
+    .message.bot .message-content {
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+    .message.user .message-content {
+      background: var(--primary);
+      color: white;
+    }
+    .chat-input-area {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--surface-soft);
+      color: var(--text);
+      font-size: 0.95rem;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .chat-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
+    }
+    .chat-send {
+      padding: 12px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+    }
+    .chat-send:hover {
+      background: var(--primary-strong);
+    }
+    .typing-indicator {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--surface-soft);
+      border-radius: 16px;
+      width: fit-content;
+    }
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: bounce 1.4s infinite;
+    }
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes bounce {
+      0%, 80%, 100% {
+        transform: translateY(0);
+        opacity: 0.8;
+      }
+      40% {
+        transform: translateY(-8px);
+        opacity: 1;
+      }
+    }
+    @media (max-width: 1024px) {
+      .support-container {
+        grid-template-columns: 1fr;
+      }
+      .chat-container {
+        grid-column: 1;
+      }
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">💰</div>
+      <span class="logo-text">ExpensesIQ</span>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('personal_dashboard') }}" class="nav-item">
+        <span class="nav-icon">📊</span>
+        <span class="nav-text">Dashboard</span>
+      </a>
+      <a href="{{ url_for('transactions_page') }}" class="nav-item">
+        <span class="nav-icon">💳</span>
+        <span class="nav-text">Transactions</span>
+      </a>
+      <a href="{{ url_for('budgets') }}" class="nav-item">
+        <span class="nav-icon">🎯</span>
+        <span class="nav-text">Budgets</span>
+      </a>
+      <a href="{{ url_for('goals_page') }}" class="nav-item">
+        <span class="nav-icon">🎪</span>
+        <span class="nav-text">Goals</span>
+      </a>
+      <a href="{{ url_for('calendar_page') }}" class="nav-item">
+        <span class="nav-icon">📅</span>
+        <span class="nav-text">Calendar</span>
+      </a>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="dropdown-menu" id="settingsMenu">
+        <button class="dropdown-toggle">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Settings</span>
+        </button>
+        <div class="dropdown-content">
+          <a href="{{ url_for('profile') }}">
+            <span>👤</span>
+            <span>Profile</span>
+          </a>
+          <a href="{{ url_for('preferences') }}">
+            <span>🔔</span>
+            <span>Preferences</span>
+          </a>
+          <a href="{{ url_for('help_support') }}">
+            <span>❓</span>
+            <span>Help & Support</span>
+          </a>
+          <a href="/logout" style="border-top: 1px solid rgba(255,255,255,0.1); color: #ef4444;">
+            <span>🚪</span>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="dashboard-main">
+    <header class="dashboard-header">
+      <div class="header-left">
+        <h1>Help & Support</h1>
+        <span class="header-subtitle">Get answers to your questions with AI Chat or browse FAQs</span>
+      </div>
+    </header>
+
+    <section class="dashboard-content">
+      <div class="support-container">
+        <!-- FAQ Section -->
+        <div class="support-card">
+          <h3>❓ Frequently Asked Questions</h3>
+          
+          <div class="faq-item" onclick="toggleFAQ(this)">
+            <div class="faq-question">How do I add a new transaction?</div>
+            <div class="faq-answer">
+              Go to the Dashboard, fill in the transaction details (amount, category, type), and click Add. You can also use the Transactions page for bulk entries.
+            </div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFAQ(this)">
+            <div class="faq-question">How do I set up a budget?</div>
+            <div class="faq-answer">
+              Navigate to the Budgets section, click "Create Budget", select a category, set your spending limit, and define the time period.
+            </div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFAQ(this)">
+            <div class="faq-question">Can I export my data?</div>
+            <div class="faq-answer">
+              Yes! Go to Preferences, enable "Data Export", and you'll receive a CSV file with all your transactions and financial data.
+            </div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFAQ(this)">
+            <div class="faq-question">How do I reset my password?</div>
+            <div class="faq-answer">
+              Click on your Profile in Settings, scroll to "Change Password", enter your current and new password, then click Change Password.
+            </div>
+          </div>
+
+          <div class="faq-item" onclick="toggleFAQ(this)">
+            <div class="faq-question">What is a spending goal?</div>
+            <div class="faq-answer">
+              Goals allow you to set savings targets. You can create multiple goals with different target amounts and deadlines to track your progress.
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Help Section -->
+        <div class="support-card">
+          <h3>🚀 Quick Help</h3>
+          <p><strong>Getting Started:</strong></p>
+          <div>
+            <a href="#" onclick="openChat('getting started')" class="support-link">Getting Started Guide</a>
+            <a href="#" onclick="openChat('budgets')" class="support-link">Budget Setup</a>
+          </div>
+          
+          <p style="margin-top: 16px;"><strong>Common Issues:</strong></p>
+          <div>
+            <a href="#" onclick="openChat('transaction error')" class="support-link">Transaction Error</a>
+            <a href="#" onclick="openChat('login issue')" class="support-link">Login Issues</a>
+          </div>
+
+          <p style="margin-top: 16px;"><strong>Account Help:</strong></p>
+          <div>
+            <a href="#" onclick="openChat('password reset')" class="support-link">Password Reset</a>
+            <a href="#" onclick="openChat('data privacy')" class="support-link">Data & Privacy</a>
+          </div>
+        </div>
+
+        <!-- AI Chat Section -->
+        <div class="chat-container">
+          <div class="chat-header">
+            🤖 AI Chat Assistant - Ask me anything!
+          </div>
+          
+          <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+              <div class="message-avatar">🤖</div>
+              <div class="message-content">
+                Hi there! 👋 I'm your AI assistant. I can help you with questions about budgets, transactions, reports, and more. What can I assist you with today?
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <input 
+              type="text" 
+              class="chat-input" 
+              id="chatInput" 
+              placeholder="Ask me anything about ExpensesIQ..."
+              onkeypress="handleChatKeypress(event)"
+            >
+            <button class="chat-send" onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Settings dropdown menu toggle
+    const settingsMenu = document.getElementById('settingsMenu');
+    const dropdownToggle = settingsMenu.querySelector('.dropdown-toggle');
+    
+    if (dropdownToggle) {
+      dropdownToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        settingsMenu.classList.toggle('active');
+      });
+      
+      document.addEventListener('click', function(e) {
+        if (!settingsMenu.contains(e.target)) {
+          settingsMenu.classList.remove('active');
+        }
+      });
+    }
+
+    // FAQ Toggle
+    function toggleFAQ(item) {
+      item.classList.toggle('active');
+    }
+
+    // Chat functionality
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatTransactions = {{ chat_transactions|default('[]')|safe }};
+    const chatMonthlyBudget = {{ chat_monthly_budget|default('null')|tojson|safe }};
+
+    const aiResponses = {
+      greeting: 'Hello! I can help with transactions, CSV uploads, budgets, goals, reports, and account settings. What would you like to do?',
+      noTransactions: 'I could not find any transactions for that period. Add a transaction or upload a CSV, then ask me again.',
+      gettingStarted: 'To get started, add an income or expense from the Dashboard, then review the totals and charts. You can set budgets and savings goals from the sidebar.',
+      addTransaction: 'To add a transaction, open Dashboard and use Quick Add Transaction. Choose Income or Expense, enter the amount, date, category, and note, then select Save Transaction.',
+      editTransaction: 'Open Transactions, find the entry, and select Edit. Update the amount, category, type, date, or note, then save the changes.',
+      deleteTransaction: 'Open Transactions and select Delete beside the entry. Check the date and amount first because deletion removes the transaction from your records.',
+      transactionIssue: 'For a transaction problem, check that the amount is positive, the date is valid, a category is selected, and the type is Income or Expense. Refresh the page and try again.',
+      csv: 'For CSV upload, use a .csv file under 10MB with date and amount columns. Category, description, and type are supported; type defaults to expense. Invalid rows are reported after upload.',
+      duplicate: 'Duplicate transactions are flagged when matching entries are detected. Review the duplicate report before deleting anything, since repeated payments can be legitimate.',
+      trends: 'Use the From and To date fields above the Monthly Income vs Expense Trends chart, then select Apply. Clear removes the date range.',
+      incomeExpense: 'Income is money received and Expense is money spent. The dashboard calculates net balance as total income minus total expenses.',
+      budget: 'Budgets set spending limits by category. Open Budgets, choose a category and limit, then compare your actual spending with the remaining amount.',
+      goal: 'Goals are savings targets. Open Goals, enter a title, target amount, saved amount, and target date to track progress.',
+      password: 'To reset a forgotten password, open the Forgot Password link on the sign-in page and follow the email or OTP instructions. To change it while signed in, use Profile.',
+      login: 'Check that you are using the registered Gmail address and password. If you cannot sign in, use Forgot Password. Contact support if the account is locked.',
+      export: 'Use the export option in Preferences to download your transaction data as CSV. Keep exported files private because they contain financial records.',
+      currency: 'Currency settings are available in Preferences. Select the currency used to display amounts throughout the app.',
+      security: 'Never share your password or OTP. Log out on shared devices and enable two-factor authentication from Preferences when available.',
+      privacy: 'Your transaction data is scoped to your account or business group. Avoid entering passwords, OTPs, or card security codes into notes or chat.',
+      default: 'I can help with adding, editing, deleting, or uploading transactions; duplicate checks; date-range trends; budgets; goals; login; password reset; exports; and privacy. What do you need help with?'
+    };
+
+    function addMessage(text, isUser = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = isUser ? '👤' : '🤖';
+      
+      const content = document.createElement('div');
+      content.className = 'message-content';
+      content.textContent = text;
+      
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(content);
+      chatMessages.appendChild(messageDiv);
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTyping() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot';
+      messageDiv.id = 'typingIndicator';
+      
+      const avatar = document.createElement('div');
+      avatar.className = 'message-avatar';
+      avatar.textContent = '🤖';
+      
+      const typing = document.createElement('div');
+      typing.className = 'typing-indicator';
+      typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+      
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(typing);
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function getAIResponse(userInput) {
+      const input = userInput.toLowerCase();
+
+      if (/^(hi|hello|hey|good morning|good evening)\b/.test(input)) return aiResponses.greeting;
+      if (input.includes('getting started') || input.includes('how do i start')) return aiResponses.gettingStarted;
+      const dataResponse = getDataResponse(input);
+      if (dataResponse) return dataResponse;
+      if (input.includes('csv') || input.includes('upload') || input.includes('import')) return aiResponses.csv;
+      if (input.includes('duplicate') || input.includes('twice') || input.includes('double')) return aiResponses.duplicate;
+      if (input.includes('trend') || input.includes('date range') || input.includes('from date') || input.includes('to date')) return aiResponses.trends;
+      if (/(how much|what.*amount|total|spent|spend|used|use)/.test(input) && /(income|expense|spent|spend|used|use|money|amount)/.test(input)) return getTransactionTotalResponse(input);
+      if ((input.includes('income') && input.includes('expense')) || input.includes('net balance')) return aiResponses.incomeExpense;
+      if (input.includes('delete') || input.includes('remove')) return aiResponses.deleteTransaction;
+      if (input.includes('edit') || input.includes('update') || input.includes('change transaction')) return aiResponses.editTransaction;
+      if (input.includes('add transaction') || input.includes('new transaction') || input.includes('record a payment')) return aiResponses.addTransaction;
+      if (input.includes('transaction') || input.includes('payment') || input.includes('expense')) return aiResponses.transactionIssue;
+      if (input.includes('budget')) return aiResponses.budget;
+      if (input.includes('goal') || input.includes('saving target')) return aiResponses.goal;
+      if (input.includes('password') || input.includes('forgot')) return aiResponses.password;
+      if (input.includes('login') || input.includes('sign in') || input.includes('account locked')) return aiResponses.login;
+      if (input.includes('export') || input.includes('download data')) return aiResponses.export;
+      if (input.includes('currency')) return aiResponses.currency;
+      if (input.includes('security') || input.includes('otp') || input.includes('two factor')) return aiResponses.security;
+      if (input.includes('privacy') || input.includes('data')) return aiResponses.privacy;
+
+      return aiResponses.default;
+    }
+
+    function getDataResponse(input) {
+      const transactions = chatTransactions.map(transaction => ({
+        ...transaction,
+        amount: Number(transaction.amount || 0),
+        type: (transaction.type || 'expense').toLowerCase(),
+        text: `${transaction.category || ''} ${transaction.note || ''}`.toLowerCase()
+      })).filter(transaction => transaction.date);
+      const now = new Date();
+      const monthNames = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      const monthMatch = input.match(new RegExp('\\b(' + monthNames.join('|') + ')\\b'));
+      const yearMatch = input.match(/\\b(20\\d{2})\\b/);
+      const year = yearMatch ? Number(yearMatch[1]) : now.getFullYear();
+      let period = transactions;
+      let periodLabel = 'all time';
+
+      if (input.includes('today')) {
+        period = transactions.filter(transaction => transaction.date === now.toISOString().slice(0, 10));
+        periodLabel = 'today';
+      } else if (input.includes('yesterday')) {
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        period = transactions.filter(transaction => transaction.date === yesterday.toISOString().slice(0, 10));
+        periodLabel = 'yesterday';
+      } else if (input.includes('this week') || input.includes('last 7 days')) {
+        const start = new Date(now);
+        start.setDate(now.getDate() - 6);
+        period = transactions.filter(transaction => new Date(transaction.date + 'T00:00:00') >= start);
+        periodLabel = 'the last 7 days';
+      } else if (input.includes('last month')) {
+        const monthStart = new Date(year, now.getMonth() - 1, 1);
+        period = transactions.filter(transaction => { const d = new Date(transaction.date + 'T00:00:00'); return d.getMonth() === monthStart.getMonth() && d.getFullYear() === monthStart.getFullYear(); });
+        periodLabel = monthNames[monthStart.getMonth()] + ' ' + monthStart.getFullYear();
+      } else if (monthMatch) {
+        const month = monthNames.indexOf(monthMatch[1]);
+        period = transactions.filter(transaction => { const d = new Date(transaction.date + 'T00:00:00'); return d.getMonth() === month && d.getFullYear() === year; });
+        periodLabel = monthMatch[1].replace(/^./, letter => letter.toUpperCase()) + ' ' + year;
+      } else if (input.includes('this month') || input.includes('current month')) {
+        period = transactions.filter(transaction => { const d = new Date(transaction.date + 'T00:00:00'); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+        periodLabel = 'this month';
+      } else if (input.includes('this year') || input.includes('year')) {
+        period = transactions.filter(transaction => new Date(transaction.date + 'T00:00:00').getFullYear() === year);
+        periodLabel = String(year);
+      }
+
+      const expenses = period.filter(transaction => transaction.type === 'expense');
+      const income = period.filter(transaction => transaction.type === 'income');
+      const total = list => list.reduce((sum, transaction) => sum + transaction.amount, 0);
+      const expenseTotal = total(expenses);
+      const incomeTotal = total(income);
+      const money = amount => `₹${amount.toFixed(2)}`;
+      const categoryTotals = list => list.reduce((result, transaction) => {
+        const category = transaction.category || 'Uncategorized';
+        result[category] = (result[category] || 0) + transaction.amount;
+        return result;
+      }, {});
+      const rankedCategories = Object.entries(categoryTotals(expenses)).sort((a, b) => b[1] - a[1]);
+      const categoryNames = ['food', 'shopping', 'transportation', 'transport', 'groceries', 'entertainment', 'travel', 'fuel', 'subscriptions', 'education', 'healthcare', 'restaurants'];
+      const requestedCategory = categoryNames.find(category => input.includes(category));
+      const categoryTransactions = requestedCategory ? expenses.filter(transaction => transaction.text.includes(requestedCategory)) : expenses;
+      const categoryLabel = requestedCategory || 'that category';
+      const merchantMatch = input.match(/(?:at|from|containing|related to)\s+([a-z0-9][a-z0-9 &'-]{1,30}?)(?:\s+(?:this month|last month|this year|in \w+)|\?|\.|$)/i);
+      const merchant = merchantMatch ? merchantMatch[1].trim().toLowerCase() : null;
+
+      if (input.includes('top 5') || input.includes('most money on') || input.includes('where is most of my money')) {
+        return rankedCategories.length ? `Your top spending categories for ${periodLabel} are: ${rankedCategories.slice(0, 5).map(([category, amount], index) => `${index + 1}. ${category} (${money(amount)})`).join(', ')}.` : aiResponses.noTransactions;
+      }
+      if (input.includes('budget') || input.includes('within my monthly budget') || input.includes('budget have i used')) {
+        const currentMonthExpenses = transactions.filter(transaction => { const d = new Date(transaction.date + 'T00:00:00'); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && transaction.type === 'expense'; });
+        const used = total(currentMonthExpenses);
+        const spendMatch = input.match(/(?:spend|afford)\s*[₹$]?\s*([\d,]+)/);
+        if (spendMatch && (input.includes('week') || input.includes('afford'))) {
+          const requested = Number(spendMatch[1].replace(/,/g, ''));
+          const recentStart = new Date(now);
+          recentStart.setDate(now.getDate() - 6);
+          const recentSpend = total(expenses.filter(transaction => new Date(transaction.date + 'T00:00:00') >= recentStart));
+          const weeklyBudget = chatMonthlyBudget === null ? null : Number(chatMonthlyBudget) / 4.345;
+          if (weeklyBudget === null || Number.isNaN(weeklyBudget)) return `You are considering spending ${money(requested)}. Set a monthly budget so I can check whether it fits your safe weekly allowance.`;
+          const available = weeklyBudget - recentSpend;
+          return requested <= available ? `Based on your budget, you can likely afford ${money(requested)} this week, with about ${money(available)} available after your recent spending.` : `That would likely exceed your safe weekly allowance by about ${money(requested - available)}. Your estimated weekly amount remaining is ${money(Math.max(0, available))}.`;
+        }
+        if (chatMonthlyBudget === null || Number.isNaN(Number(chatMonthlyBudget))) return `You have used ${money(used)} this month. Set a monthly budget in the Budget section so I can calculate the remaining amount.`;
+        const budget = Number(chatMonthlyBudget);
+        const remaining = budget - used;
+        return remaining >= 0 ? `You have used ${money(used)} of your ${money(budget)} monthly budget, leaving ${money(remaining)}.` : `You have used ${money(used)} of your ${money(budget)} monthly budget and are ${money(Math.abs(remaining))} over budget.`;
+      }
+      if (input.includes('category increased') || input.includes('category decreased')) return 'To compare category changes, use the date-range filters on the trends chart. I can compare two periods when both date ranges are specified.';
+      if (requestedCategory && (input.includes('how much') || input.includes('spend') || input.includes('spent') || input.includes('expenses') || input.includes('show all'))) {
+        return categoryTransactions.length ? `You spent ${money(total(categoryTransactions))} on ${categoryLabel} during ${periodLabel}, across ${categoryTransactions.length} transaction${categoryTransactions.length === 1 ? '' : 's'}.` : `No ${categoryLabel} expenses were found for ${periodLabel}.`;
+      }
+      if (merchant) {
+        const merchantTransactions = expenses.filter(transaction => transaction.text.includes(merchant));
+        return merchantTransactions.length ? `You spent ${money(total(merchantTransactions))} at ${merchantMatch[1].trim()} during ${periodLabel}, across ${merchantTransactions.length} transaction${merchantTransactions.length === 1 ? '' : 's'}.` : `No expenses matching ${merchantMatch[1].trim()} were found for ${periodLabel}.`;
+      }
+      const dayMatch = input.match(/(?:on|date)\s+(?:the\s+)?(\d{1,2})(?:st|nd|rd|th)?/);
+      if (dayMatch && monthMatch) {
+        const requestedDay = String(Number(dayMatch[1])).padStart(2, '0');
+        const monthNumber = String(monthNames.indexOf(monthMatch[1]) + 1).padStart(2, '0');
+        const dayTransactions = expenses.filter(transaction => transaction.date === `${year}-${monthNumber}-${requestedDay}`);
+        return dayTransactions.length ? `On ${monthMatch[1]} ${requestedDay}, you spent ${money(total(dayTransactions))}: ${dayTransactions.map(transaction => `${transaction.category || 'General'} (${money(transaction.amount)})`).join(', ')}.` : `No expenses were found on ${monthMatch[1]} ${requestedDay}, ${year}.`;
+      }
+      if (input.includes('above') || input.includes('over')) {
+        const thresholdMatch = input.match(/(?:above|over)\s*[₹$]?\s*([\d,]+)/);
+        if (thresholdMatch) {
+          const threshold = Number(thresholdMatch[1].replace(/,/g, ''));
+          const matches = expenses.filter(transaction => transaction.amount > threshold);
+          return matches.length ? `${matches.length} expense${matches.length === 1 ? '' : 's'} exceeded ${money(threshold)}: ${matches.slice(0, 5).map(transaction => `${money(transaction.amount)} on ${transaction.date}`).join(', ')}.` : `No expenses exceeded ${money(threshold)}.`;
+        }
+      }
+      if (input.includes('biggest') || input.includes('largest')) {
+        const largest = [...expenses].sort((a, b) => b.amount - a.amount)[0];
+        return largest ? `Your largest expense for ${periodLabel} was ${money(largest.amount)} on ${largest.date}${largest.category ? ` (${largest.category})` : ''}.` : aiResponses.noTransactions;
+      }
+      if (input.includes('smallest')) {
+        const smallest = [...expenses].sort((a, b) => a.amount - b.amount)[0];
+        return smallest ? `Your smallest expense for ${periodLabel} was ${money(smallest.amount)} on ${smallest.date}${smallest.category ? ` (${smallest.category})` : ''}.` : aiResponses.noTransactions;
+      }
+      if (input.includes('recent') || input.includes('latest') || input.includes('last transaction')) {
+        const recent = [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+        return recent.length ? `Your latest transactions are: ${recent.map(transaction => `${transaction.type} ${money(transaction.amount)} on ${transaction.date}`).join('; ')}.` : aiResponses.noTransactions;
+      }
+      if (input.includes('duplicate')) {
+        const seen = new Map();
+        const duplicates = expenses.filter(transaction => { const key = `${transaction.date}|${transaction.amount}|${transaction.text}`; const count = seen.get(key) || 0; seen.set(key, count + 1); return count > 0; });
+        return duplicates.length ? `I found ${duplicates.length} possible duplicate transaction${duplicates.length === 1 ? '' : 's'}. Review entries with matching date, amount, and description.` : 'I did not find duplicate transactions in your records.';
+      }
+      if (input.includes('unusual') || input.includes('suspicious') || input.includes('fraud')) {
+        const average = expenses.length ? expenseTotal / expenses.length : 0;
+        const unusual = expenses.filter(transaction => transaction.amount > average * 2 && transaction.amount > 1000);
+        return unusual.length ? `I found ${unusual.length} unusually large expense${unusual.length === 1 ? '' : 's'}: ${unusual.slice(0, 5).map(transaction => `${money(transaction.amount)} on ${transaction.date}`).join(', ')}.` : 'I did not find expenses that are unusually large compared with your recorded average.';
+      }
+      if (input.includes('compare') || input.includes('more this month') || input.includes('month-over-month')) {
+        const currentMonth = now.getMonth();
+        const currentTotal = total(transactions.filter(transaction => { const d = new Date(transaction.date + 'T00:00:00'); return transaction.type === 'expense' && d.getMonth() === currentMonth && d.getFullYear() === now.getFullYear(); }));
+        const previousDate = new Date(now.getFullYear(), currentMonth - 1, 1);
+        const previousTotal = total(transactions.filter(transaction => { const d = new Date(transaction.date + 'T00:00:00'); return transaction.type === 'expense' && d.getMonth() === previousDate.getMonth() && d.getFullYear() === previousDate.getFullYear(); }));
+        const difference = currentTotal - previousTotal;
+        return `This month you spent ${money(currentTotal)} compared with ${money(previousTotal)} last month. That is ${difference >= 0 ? 'an increase' : 'a decrease'} of ${money(Math.abs(difference))}.`;
+      }
+      if (input.includes('save more') || input.includes('reduce') || input.includes('saving') || input.includes('cut') || input.includes('wasting')) {
+        const focus = rankedCategories[0];
+        return focus ? `Your biggest opportunity is ${focus[0]} at ${money(focus[1])} for ${periodLabel}. Try reducing it by 10% first; that could save about ${money(focus[1] * 0.1)}.` : 'Add more expense transactions and I can suggest personalized saving opportunities.';
+      }
+      if (input.includes('how much') || input.includes('total spending') || input.includes('total expenses') || input.includes('used')) {
+        return period.length ? `You spent ${money(expenseTotal)} during ${periodLabel}, across ${expenses.length} expense${expenses.length === 1 ? '' : 's'}. Income was ${money(incomeTotal)}.` : `No transactions were found for ${periodLabel}.`;
+      }
+      return null;
+    }
+
+    function getTransactionTotalResponse(input) {
+      const monthNames = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+      const monthMatch = input.match(new RegExp('\\b(' + monthNames.join('|') + ')\\b'));
+      const requestedMonth = monthMatch ? monthNames.indexOf(monthMatch[1]) + 1 : new Date().getMonth() + 1;
+      const yearMatch = input.match(/\\b(20\\d{2})\\b/);
+      const requestedYear = yearMatch ? Number(yearMatch[1]) : new Date().getFullYear();
+      const periodTransactions = chatTransactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date + 'T00:00:00');
+        return !Number.isNaN(transactionDate.getTime()) &&
+          transactionDate.getMonth() + 1 === requestedMonth &&
+          transactionDate.getFullYear() === requestedYear;
+      });
+      const expenses = periodTransactions.filter(transaction => (transaction.type || 'expense').toLowerCase() === 'expense');
+      const income = periodTransactions.filter(transaction => (transaction.type || 'expense').toLowerCase() === 'income');
+      const expenseTotal = expenses.reduce((total, transaction) => total + Number(transaction.amount || 0), 0);
+      const incomeTotal = income.reduce((total, transaction) => total + Number(transaction.amount || 0), 0);
+      const monthLabel = monthNames[requestedMonth - 1].replace(/^./, letter => letter.toUpperCase());
+
+      if (!periodTransactions.length) return `No transactions were found for ${monthLabel} ${requestedYear}.`;
+      if (input.includes('income') && !input.includes('expense')) return `Your total income for ${monthLabel} ${requestedYear} is ₹${incomeTotal.toFixed(2)}.`;
+      if (input.includes('net') || (input.includes('income') && input.includes('expense'))) {
+        return `For ${monthLabel} ${requestedYear}, income was ₹${incomeTotal.toFixed(2)}, expenses were ₹${expenseTotal.toFixed(2)}, and your net balance was ₹${(incomeTotal - expenseTotal).toFixed(2)}.`;
+      }
+      return `You used ₹${expenseTotal.toFixed(2)} in expenses during ${monthLabel} ${requestedYear}, across ${expenses.length} transaction${expenses.length === 1 ? '' : 's'}.`;
+    }
+
+    function sendMessage() {
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      // Add user message
+      addMessage(message, true);
+      chatInput.value = '';
+
+      // Show typing indicator
+      showTyping();
+
+      // Simulate AI response delay
+      setTimeout(() => {
+        const typingDiv = document.getElementById('typingIndicator');
+        if (typingDiv) typingDiv.remove();
+        
+        const response = getAIResponse(message);
+        addMessage(response);
+      }, 1000);
+    }
+
+    function handleChatKeypress(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function openChat(topic) {
+      chatInput.value = 'Tell me about ' + topic;
+      chatInput.focus();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Transactions CSV - ExpenseAuditor</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .upload-container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .dropzone-card {
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    .dropzone-card:hover, .dropzone-card.dragover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      box-shadow: var(--shadow);
+    }
+    .dropzone-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--primary);
+    }
+    .dropzone-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .dropzone-subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+    .file-input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .format-guide-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 0.9rem;
+    }
+    .format-guide-table th {
+      background: var(--surface-soft);
+      padding: 10px 14px;
+      text-align: left;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .format-guide-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: var(--text);
+    }
+    .badge-req {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-opt {
+      background: rgba(148, 163, 184, 0.2);
+      color: var(--muted);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+    }
+    .result-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .result-stat {
+      background: var(--surface-soft);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .result-stat .num {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+    .err-list {
+      max-height: 250px;
+      overflow-y: auto;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.2);
+    }
+    .err-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.85rem;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .err-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body class="dashboard-page">
+  <!-- Top Navigation / Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">📊</div>
+      <span class="logo-text">ExpenseAuditor</span>
+    </div>
+    <nav class="sidebar-nav">
+      {% if user_type == 'business' %}
+        <a href="/business/dashboard" class="nav-item"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+        <a href="/transactions" class="nav-item"><span class="nav-icon">💳</span><span class="nav-text">Transactions</span></a>
+        <a href="/upload-csv" class="nav-item active"><span class="nav-icon">📁</span><span class="nav-text">Upload CSV</span></a>
+        <a href="/business/invoices" class="nav-item"><span class="nav-icon">🧾</span><span class="nav-text">Invoices</span></a>
+        <a href="/business/purchases" class="nav-item"><span class="nav-icon">🛒</span><span class="nav-text">Purchases</span></a>
+        <a href="/business/gst" class="nav-item"><span class="nav-icon">📑</span><span class="nav-text">GST Report</span></a>
+      {% else %}
+        <a href="/personal/dashboard" class="nav-item"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+        <a href="/transactions" class="nav-item"><span class="nav-icon">💳</span><span class="nav-text">Transactions</span></a>
+        <a href="/upload-csv" class="nav-item active"><span class="nav-icon">📁</span><span class="nav-text">Upload CSV</span></a>
+        <a href="/budgets" class="nav-item"><span class="nav-icon">🎯</span><span class="nav-text">Budgets</span></a>
+        <a href="/goals" class="nav-item"><span class="nav-icon">🎪</span><span class="nav-text">Goals</span></a>
+        <a href="/calendar" class="nav-item"><span class="nav-icon">📅</span><span class="nav-text">Calendar</span></a>
+      {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/logout" class="logout-btn" style="color: #f87171; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+        <span class="nav-icon">🚪</span>
+        <span class="nav-text">Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="dashboard-main">
+    <header class="dashboard-header">
+      <div class="header-left">
+        <h1>Upload Transaction CSV</h1>
+        <span class="header-subtitle">Process and audit 50+ transactions automatically with AI pattern analysis.</span>
+      </div>
+      <div class="header-right">
+        <a href="/download-sample-csv" class="form-btn button-secondary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+          <span>📥</span> Download Sample CSV (50+ Rows)
+        </a>
+      </div>
+    </header>
+
+    <section class="dashboard-content upload-container">
+      {% if upload_result %}
+        <div class="dashboard-card" style="border-left: 4px solid {{ 'var(--success)' if upload_result.get('valid_count', 0) > 0 else 'var(--danger)' }};">
+          <div class="card-header">
+            <h2>{{ '✓ Upload Complete' if upload_result.get('valid_count', 0) > 0 else '✗ Upload Error' }}</h2>
+          </div>
+          <p style="color: var(--text); margin-bottom: 12px;">{{ upload_result.message }}</p>
+
+          <div class="result-summary-grid">
+            <div class="result-stat">
+              <span style="color: var(--muted); font-size: 0.85rem;">Total Rows</span>
+              <div class="num" style="color: var(--text);">{{ upload_result.get('total_rows', 0) }}</div>
+            </div>
+            <div class="result-stat">
+              <span style="color: var(--success); font-size: 0.85rem;">Valid Imported</span>
+              <div class="num" style="color: var(--success);">{{ upload_result.get('valid_count', 0) }}</div>
+            </div>
+            <div class="result-stat">
+              <span style="color: var(--danger); font-size: 0.85rem;">Invalid Skipped</span>
+              <div class="num" style="color: var(--danger);">{{ upload_result.get('invalid_count', 0) }}</div>
+            </div>
+            <div class="result-stat">
+              <span style="color: var(--accent); font-size: 0.85rem;">Duplicates Flagged</span>
+              <div class="num" style="color: var(--accent);">{{ upload_result.get('duplicate_count', 0) }}</div>
+            </div>
+          </div>
+
+          {% if upload_result.get('validation_errors', []) %}
+            <h4 style="margin-top: 20px; color: var(--danger); font-size: 0.95rem;">Validation Issues Skipped:</h4>
+            <div class="err-list">
+              {% for err in upload_result.get('validation_errors', []) %}
+                <div class="err-item">
+                  <span style="color: var(--danger); font-weight: 700;">Row {{ err.row }}:</span>
+                  <span style="color: var(--muted);">{{ err.error }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if upload_result.get('valid_count', 0) > 0 %}
+            <div style="margin-top: 24px;">
+              <a href="{{ '/business/dashboard' if user_type == 'business' else '/personal/dashboard' }}" class="form-btn" style="text-decoration: none; display: inline-block;">
+                View Updated Dashboard & AI Audit →
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <!-- Upload Form Card -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>Select CSV File</h2>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" id="csvForm">
+          <div class="dropzone-card" id="dropzone">
+            <input type="file" name="file" id="csvFileInput" class="file-input" accept=".csv,text/csv" required onchange="handleFileSelected()">
+            <div class="dropzone-icon">📂</div>
+            <div class="dropzone-title" id="dropzoneTitle">Click to choose or drag & drop CSV file</div>
+            <div class="dropzone-subtitle" id="dropzoneSubtitle">Supports at least 50+ transactions per file (.csv format only, max 10MB)</div>
+            <button type="button" class="form-btn button-secondary" style="pointer-events: none;">Browse File</button>
+          </div>
+
+          <div style="margin-top: 20px; text-align: right;">
+            <button type="submit" class="form-btn" id="uploadSubmitBtn" style="padding: 12px 28px; font-weight: 700;">Upload and Analyse Transactions</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- CSV Specification Guide -->
+      <div class="dashboard-card">
+        <div class="card-header">
+          <h2>Expected CSV Format Specification</h2>
+        </div>
+        <p style="color: var(--muted); font-size: 0.9rem;">
+          Your CSV file must include headers matching standard financial columns:
+        </p>
+
+        <table class="format-guide-table">
+          <thead>
+            <tr>
+              <th>Column</th>
+              <th>Requirement</th>
+              <th>Allowed Values / Format</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>date</code></td>
+              <td><span class="badge-req">Required</span></td>
+              <td>ISO Format (YYYY-MM-DD) or DD-MM-YYYY</td>
+              <td><code>2026-08-01</code></td>
+            </tr>
+            <tr>
+              <td><code>amount</code></td>
+              <td><span class="badge-req">Required</span></td>
+              <td>Positive Numeric (decimals allowed)</td>
+              <td><code>450</code> or <code>1500.50</code></td>
+            </tr>
+            <tr>
+              <td><code>category</code></td>
+              <td><span class="badge-opt">Optional</span></td>
+              <td>Food, Transport, Salary, Supplies, Utilities, etc.</td>
+              <td><code>Food</code></td>
+            </tr>
+            <tr>
+              <td><code>description</code></td>
+              <td><span class="badge-opt">Optional</span></td>
+              <td>Merchant, payee, invoice reference or notes</td>
+              <td><code>Swiggy lunch order</code></td>
+            </tr>
+            <tr>
+              <td><code>type</code></td>
+              <td><span class="badge-opt">Optional</span></td>
+              <td><code>expense</code> or <code>income</code> (defaults to expense)</td>
+              <td><code>expense</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function handleFileSelected() {
+      const input = document.getElementById('csvFileInput');
+      const title = document.getElementById('dropzoneTitle');
+      const subtitle = document.getElementById('dropzoneSubtitle');
+      const submitBtn = document.getElementById('uploadSubmitBtn');
+
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const isCsv = file.name.toLowerCase().endsWith('.csv');
+        const maxFileSize = 10 * 1024 * 1024;
+
+        if (!isCsv || file.size > maxFileSize) {
+          input.value = '';
+          title.textContent = 'Click to choose or drag & drop CSV file';
+          subtitle.textContent = !isCsv
+            ? 'Please select a .csv file.'
+            : 'The selected file is larger than the 10MB limit.';
+          submitBtn.disabled = true;
+          document.getElementById('dropzone').style.borderColor = 'var(--danger)';
+          return;
+        }
+
+        title.textContent = `Selected: ${file.name}`;
+        subtitle.textContent = `Size: ${(file.size / 1024).toFixed(1)} KB | Ready to upload`;
+        submitBtn.disabled = false;
+        document.getElementById('dropzone').style.borderColor = 'var(--success)';
+      }
+    }
+
+    const dropzone = document.getElementById('dropzone');
+    ['dragenter', 'dragover'].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+    });
+  </script>
+</body>
+</html>
