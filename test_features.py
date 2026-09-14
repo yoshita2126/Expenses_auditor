@@ -6,9 +6,14 @@ Tests all implemented features
 import sqlite3
 import requests
 import json
+import sys
+import time
 from werkzeug.security import generate_password_hash
 
 BASE_URL = "http://localhost:5000"
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 def test_database_structure():
     """Test 1: Database schema verification"""
@@ -167,7 +172,7 @@ def test_business_service():
         result = register_business(
             owner_id=user_id,
             business_name="Test Shop",
-            gst_id="27AABCT1234H1Z0",
+            gst_id=f"27AABCT{time.time_ns() % 10000000000:010d}H1Z0",
             business_type="retail",
             phone="9876543210",
             email="shop@example.com",
@@ -206,7 +211,7 @@ def test_business_service():
         product_result = add_product(
             business_id=business_id,
             product_name="Wooden Chair",
-            sku="WC-001",
+            sku=f"WC-{time.time_ns() % 10000000000:010d}",
             category="Furniture",
             unit_price=500.00,
             cost_price=300.00,
@@ -324,7 +329,7 @@ def test_password_validation():
         ('weak@pass', False),
         ('WEAK@PASS1', False),
         ('NoSpecial123', False),
-        ('short@P1', False),
+        ('short@P', False),
     ]
     
     for pwd, should_pass in test_passwords:

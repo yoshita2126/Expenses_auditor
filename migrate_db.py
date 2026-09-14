@@ -6,6 +6,9 @@ Database migration script to add phone column to otp_tokens table
 import sqlite3
 import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 def migrate_database():
     """Add phone column to otp_tokens table if it doesn't exist"""
     try:

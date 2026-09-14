@@ -59,10 +59,7 @@ def register_api_routes(app):
             
             # Send OTP
             send_results = send_otp(email=email, phone=phone, otp=otp)
-            
-            # Store OTP in database
-            store_otp(email=email, phone=phone, otp=otp, expires_in_minutes=10)
-            
+
             # Check if send succeeded
             if not send_results.get('success'):
                 return jsonify({
@@ -70,13 +67,21 @@ def register_api_routes(app):
                     'error': 'Failed to send OTP',
                     'details': send_results
                 }), 500
-            
+
+            # Store only OTPs that were successfully sent.
+            if not store_otp(email=email, phone=phone, otp=otp, expires_in_minutes=10):
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to store OTP'
+                }), 500
+
+            sent_results = send_results.get('results', {})
             return jsonify({
                 'success': True,
                 'message': 'OTP sent successfully',
                 'sent_to': {
-                    'email': email if email and email_success else None,
-                    'phone': phone if phone and phone_success else None
+                    'email': email if sent_results.get('email', {}).get('success') else None,
+                    'phone': phone if sent_results.get('phone', {}).get('success') else None
                 }
             }), 200
         
@@ -507,4 +512,3 @@ def register_api_routes(app):
             return jsonify({'success': True, 'explanation': explanation}), 200
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
-

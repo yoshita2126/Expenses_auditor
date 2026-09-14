@@ -91,8 +91,6 @@ Your ExpensesIQ dashboard has been completely redesigned with a modern, clean in
 |------|---------|
 | `templates/dashboard.html` | Updated with new card layouts |
 | `static/style.css` | Added 100+ lines of new styling |
-| `templates/dashboard_new.html` | Complete redesign (created as backup) |
-| `templates/dashboard.html.backup` | Old template backup |
 
 ---
 
