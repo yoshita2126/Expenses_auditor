@@ -15,22 +15,22 @@
     letter-spacing: 0.5px;
   }
   .badge-high {
-    background: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.4);
+    background: #FEF2F2;
+    color: #EF4444;
+    border: 1px solid #FECACA;
   }
   .badge-medium {
-    background: rgba(245, 158, 11, 0.2);
-    color: #f59e0b;
-    border: 1px solid rgba(245, 158, 11, 0.4);
+    background: #FFF7E6;
+    color: #F59E0B;
+    border: 1px solid #FDE68A;
   }
   .badge-moderate {
-    background: rgba(59, 130, 246, 0.2);
-    color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.4);
+    background: #D9F4EC;
+    color: #086F63;
+    border: 1px solid #A7E3D6;
   }
   .ai-badge {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: #0F8B78;
     color: #ffffff;
     padding: 4px 10px;
     border-radius: 20px;
@@ -38,9 +38,10 @@
     font-weight: 700;
   }
   .ai-recommendation-card {
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    border-radius: 14px;
+    background: #FFFFFF;
+    border: 1px solid #D9E2DE;
+    border-left: 4px solid #0F8B78;
+    border-radius: 10px;
     padding: 16px;
     margin-bottom: 12px;
     transition: transform 0.2s ease, border-color 0.2s ease;
@@ -51,7 +52,7 @@
   }
   .ai-card-title {
     font-weight: 700;
-    color: #e2e8f0;
+    color: #1F2933;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -59,14 +60,14 @@
   }
   .ai-card-advice {
     font-size: 0.9rem;
-    color: #cbd5e1;
+    color: #667085;
     line-height: 1.4;
     margin-bottom: 8px;
   }
   .ai-card-action {
     font-size: 0.82rem;
-    color: #818cf8;
-    background: rgba(99, 102, 241, 0.1);
+    color: #086F63;
+    background: #D9F4EC;
     padding: 6px 10px;
     border-radius: 8px;
     display: inline-block;
@@ -102,7 +103,7 @@
   }
   .savings-rate-pill {
     background: rgba(34, 197, 94, 0.2);
-    color: #4ade80;
+    color: #22C55E;
     padding: 3px 8px;
     border-radius: 12px;
     font-size: 0.8rem;
@@ -117,7 +118,7 @@
   <!-- CSV Import Quick Action Banner -->
   <div class="csv-banner">
     <div>
-      <h3 style="margin: 0; font-size: 1.1rem; color: #ffffff;">📁 Audit Spending with 50+ CSV Transactions</h3>
+      <h3 style="margin: 0; font-size: 1.1rem; color: #FFFFFF;">📁 Audit Spending with 50+ CSV Transactions</h3>
       <p style="margin: 4px 0 0 0; color: var(--muted); font-size: 0.85rem;">Upload monthly bank statements or personal ledger CSVs for instant AI pattern analysis.</p>
     </div>
     <div style="display: flex; gap: 10px;">
@@ -299,7 +300,7 @@
                     <span style="font-weight: 700; color: var(--text);">₹{{ item.total_amount }} ({{ item.percentage }}%)</span>
                   </div>
                   <div class="category-bar" style="background: rgba(255,255,255,0.08); height: 8px; border-radius: 4px; overflow: hidden;">
-                    <div class="category-fill" style="width: {{ item.percentage }}%; height: 100%; background: linear-gradient(90deg, #6366f1, #38bdf8); border-radius: 4px;"></div>
+                    <div class="category-fill" style="width: {{ item.percentage }}%; height: 100%; background: #0F8B78; border-radius: 4px;"></div>
                   </div>
                 </div>
               </div>
@@ -355,7 +356,7 @@
                   <tr>
                     <td>{{ anom.date }}</td>
                     <td><span class="badge badge-moderate">{{ anom.category }}</span></td>
-                    <td style="font-weight: 700; color: #ef4444;">₹{{ anom.amount }}</td>
+                    <td style="font-weight: 700; color: #EF4444;">₹{{ anom.amount }}</td>
                     <td>
                       <span class="badge {{ 'badge-high' if anom.severity == 'High' else ('badge-medium' if anom.severity == 'Medium' else 'badge-moderate') }}">
                         {{ anom.severity }}
@@ -402,7 +403,7 @@
                     <td>{{ dup.category }}</td>
                     <td style="font-weight: 600;">₹{{ dup.amount }}</td>
                     <td><span class="badge badge-medium">{{ dup.count }}x identical</span></td>
-                    <td style="color: #f59e0b; font-weight: 700;">₹{{ dup.excess_potential }}</td>
+                      <td style="color: #F59E0B; font-weight: 700;">₹{{ dup.excess_potential }}</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -581,7 +582,7 @@
                 <div style="font-size: 0.75rem; color: var(--muted);">{{ trx.date }}</div>
               </div>
             </div>
-            <div style="font-weight: 700; color: {{ '#ef4444' if trx.type == 'expense' else '#22c55e' }};">
+            <div style="font-weight: 700; color: {{ '#EF4444' if trx.type == 'expense' else '#22C55E' }};">
               {% if trx.type == 'expense' %}-{% else %}+{% endif %}₹{{ trx.amount }}
             </div>
           </div>

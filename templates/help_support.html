@@ -358,14 +358,14 @@
         <!-- AI Chat Section -->
         <div class="chat-container">
           <div class="chat-header">
-            🤖 AI Chat Assistant - Ask me anything!
+            🤖 ExpenseIQ AI Assistant - Ask about your finances
           </div>
           
           <div class="chat-messages" id="chatMessages">
             <div class="message bot">
               <div class="message-avatar">🤖</div>
               <div class="message-content">
-                Hi there! 👋 I'm your AI assistant. I can help you with questions about budgets, transactions, reports, and more. What can I assist you with today?
+                Hi! I’m ExpenseIQ AI Assistant. I can help with your transactions, expenses, income, budgets, savings, goals, spending analysis, and reports using your available data. What would you like to review?
               </div>
             </div>
           </div>
@@ -413,9 +413,12 @@
     const chatInput = document.getElementById('chatInput');
     const chatTransactions = {{ chat_transactions|default('[]')|safe }};
     const chatMonthlyBudget = {{ chat_monthly_budget|default('null')|tojson|safe }};
+    const chatGoals = {{ chat_goals|default('[]')|safe }};
+    const chatForecast = {{ chat_forecast|default('{}')|safe }};
+    const chatHistory = [];
 
     const aiResponses = {
-      greeting: 'Hello! I can help with transactions, CSV uploads, budgets, goals, reports, and account settings. What would you like to do?',
+      greeting: 'Hello! I’m ExpenseIQ AI Assistant. I can help with transactions, expenses, income, budgets, savings, goals, spending analysis, and reports. What would you like to review?',
       noTransactions: 'I could not find any transactions for that period. Add a transaction or upload a CSV, then ask me again.',
       gettingStarted: 'To get started, add an income or expense from the Dashboard, then review the totals and charts. You can set budgets and savings goals from the sidebar.',
       addTransaction: 'To add a transaction, open Dashboard and use Quick Add Transaction. Choose Income or Expense, enter the amount, date, category, and note, then select Save Transaction.',
@@ -434,7 +437,7 @@
       currency: 'Currency settings are available in Preferences. Select the currency used to display amounts throughout the app.',
       security: 'Never share your password or OTP. Log out on shared devices and enable two-factor authentication from Preferences when available.',
       privacy: 'Your transaction data is scoped to your account or business group. Avoid entering passwords, OTPs, or card security codes into notes or chat.',
-      default: 'I can help with adding, editing, deleting, or uploading transactions; duplicate checks; date-range trends; budgets; goals; login; password reset; exports; and privacy. What do you need help with?'
+      default: 'I can help with transactions, expenses, income, budgets, savings, goals, spending analysis, monthly comparisons, recurring expenses, unusual transactions, and reports. Please tell me the period or category you want to review.'
     };
 
     function addMessage(text, isUser = false) {
@@ -504,6 +507,21 @@
       return aiResponses.default;
     }
 
+    function detectFinanceIntent(input) {
+      if (/(unusual|suspicious|fraud|anomal)/.test(input)) return 'ANOMALY_DETECTION';
+      if (/(subscription|recurring|monthly payment|repeat payment)/.test(input)) return 'RECURRING_EXPENSES';
+      if (/(on track|goal progress|progress.*goal|savings goal)/.test(input)) return 'GOAL_PROGRESS';
+      if (/(forecast|predict|next month|will i spend)/.test(input)) return 'EXPENSE_FORECAST';
+      if (/(compare|comparison|versus|vs\.?|last month)/.test(input) && input.includes('month')) return 'MONTHLY_COMPARISON';
+      if (/(over my budget|budget status|within.*budget|budget.*used)/.test(input)) return 'BUDGET_STATUS';
+      if (/(how much can i save|how much.*save|saving potential|savings analysis)/.test(input)) return 'SAVINGS_ANALYSIS';
+      if (/(spending summary|spending breakdown|breakdown of.*spend)/.test(input)) return 'SPENDING_SUMMARY';
+      if (/(what did i spend the most|top expense|highest expense|biggest expense)/.test(input)) return 'TOP_EXPENSES';
+      if (/(how much did i spend on|expense.*category|category.*expense)/.test(input)) return 'CATEGORY_EXPENSE';
+      if (/(how much did i spend|total expenses|total spending|what.*spent|where did my money go)/.test(input)) return 'TOTAL_EXPENSES';
+      return null;
+    }
+
     function getDataResponse(input) {
       const transactions = chatTransactions.map(transaction => ({
         ...transaction,
@@ -566,6 +584,60 @@
       const categoryLabel = requestedCategory || 'that category';
       const merchantMatch = input.match(/(?:at|from|containing|related to)\s+([a-z0-9][a-z0-9 &'-]{1,30}?)(?:\s+(?:this month|last month|this year|in \w+)|\?|\.|$)/i);
       const merchant = merchantMatch ? merchantMatch[1].trim().toLowerCase() : null;
+      const intent = detectFinanceIntent(input);
+
+      if (intent === 'SPENDING_SUMMARY') {
+        return rankedCategories.length ? `Your spending summary for ${periodLabel}: ${rankedCategories.slice(0, 5).map(([category, amount]) => `${category} (${money(amount)})`).join(', ')}. Total expenses were ${money(expenseTotal)}.` : aiResponses.noTransactions;
+      }
+      if (intent === 'TOP_EXPENSES') {
+        return rankedCategories.length ? `You spent the most on ${rankedCategories[0][0]} (${money(rankedCategories[0][1])}) during ${periodLabel}. Top categories: ${rankedCategories.slice(0, 5).map(([category, amount]) => `${category} (${money(amount)})`).join(', ')}.` : aiResponses.noTransactions;
+      }
+      if (intent === 'TOTAL_EXPENSES') {
+        return period.length ? `You spent ${money(expenseTotal)} during ${periodLabel}, across ${expenses.length} expense${expenses.length === 1 ? '' : 's'}.` : `No transactions were found for ${periodLabel}.`;
+      }
+      if (intent === 'GOAL_PROGRESS') {
+        if (!chatGoals.length) return 'I could not find a savings goal in your account. Create one in Goals so I can track its progress.';
+        return `Your savings goals: ${chatGoals.map(goal => { const target = Number(goal.target || 0); const saved = Number(goal.saved || 0); const progress = target > 0 ? Math.min(100, (saved / target) * 100).toFixed(1) : '0.0'; return `${goal.title}: ${money(saved)} of ${money(target)} (${progress}%)`; }).join('; ')}.`;
+      }
+      if (intent === 'EXPENSE_FORECAST') {
+        const forecast = Array.isArray(chatForecast.forecast) ? chatForecast.forecast[0] : null;
+        if (!forecast) return 'I need recorded expense history across at least one month before I can forecast next month.';
+        return `Based on your recorded history, next month’s estimated expenses are ${money(Number(forecast.projected_expense || 0))}. This uses an average of ${money(Number(chatForecast.average_monthly_expense || 0))} per recorded month, so it is an estimate rather than a guarantee.`;
+      }
+      if (intent === 'CATEGORY_EXPENSE' && requestedCategory) {
+        return categoryTransactions.length ? `You spent ${money(total(categoryTransactions))} on ${categoryLabel} during ${periodLabel}, across ${categoryTransactions.length} transaction${categoryTransactions.length === 1 ? '' : 's'}.` : `No ${categoryLabel} expenses were found for ${periodLabel}.`;
+      }
+      if (intent === 'MONTHLY_COMPARISON') {
+        const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const monthTotal = month => total(transactions.filter(transaction => { const date = new Date(transaction.date + 'T00:00:00'); return transaction.type === 'expense' && date.getMonth() === month.getMonth() && date.getFullYear() === month.getFullYear(); }));
+        const currentTotal = monthTotal(currentMonth);
+        const previousTotal = monthTotal(previousMonth);
+        const difference = currentTotal - previousTotal;
+        return `This month you spent ${money(currentTotal)} compared with ${money(previousTotal)} last month. That is ${difference >= 0 ? 'an increase' : 'a decrease'} of ${money(Math.abs(difference))}.`;
+      }
+      if (intent === 'SAVINGS_ANALYSIS') {
+        if (!period.length) return `I need recorded income or expense transactions for ${periodLabel} to calculate savings.`;
+        const available = incomeTotal - expenseTotal;
+        const rate = incomeTotal > 0 ? ((available / incomeTotal) * 100).toFixed(2) : null;
+        return rate === null ? `Recorded expenses for ${periodLabel} are ${money(expenseTotal)}, but no income was found to calculate savings potential.` : `Based on your recorded data for ${periodLabel}, income was ${money(incomeTotal)} and expenses were ${money(expenseTotal)}. Your calculated available amount is ${money(available)}, a ${rate}% savings rate.`;
+      }
+      if (intent === 'RECURRING_EXPENSES') {
+        const recurringGroups = {};
+        expenses.forEach(transaction => {
+          const key = `${transaction.category || 'Uncategorized'}|${transaction.text || ''}`;
+          if (!recurringGroups[key]) recurringGroups[key] = { category: transaction.category || 'Uncategorized', text: transaction.text, total: 0, count: 0 };
+          recurringGroups[key].total += transaction.amount;
+          recurringGroups[key].count += 1;
+        });
+        const recurring = Object.values(recurringGroups).filter(group => group.count >= 2).sort((a, b) => b.total - a.total);
+        return recurring.length ? `I found these repeated recorded expenses for ${periodLabel}: ${recurring.slice(0, 5).map(group => `${group.category} (${money(group.total)} across ${group.count} entries)`).join(', ')}. Review the dates and notes to confirm which are subscriptions.` : `I could not confirm recurring subscriptions from the recorded transactions for ${periodLabel}. Add merchant names or notes to improve this check.`;
+      }
+      if (intent === 'ANOMALY_DETECTION') {
+        const average = expenses.length ? expenseTotal / expenses.length : 0;
+        const unusual = expenses.filter(transaction => transaction.amount > average * 2 && transaction.amount > 1000);
+        return unusual.length ? `I found ${unusual.length} unusually large expense${unusual.length === 1 ? '' : 's'} compared with your recorded average: ${unusual.slice(0, 5).map(transaction => `${money(transaction.amount)} on ${transaction.date}`).join(', ')}.` : 'I did not find expenses that are unusually large compared with your recorded average.';
+      }
 
       if (input.includes('top 5') || input.includes('most money on') || input.includes('where is most of my money')) {
         return rankedCategories.length ? `Your top spending categories for ${periodLabel} are: ${rankedCategories.slice(0, 5).map(([category, amount], index) => `${index + 1}. ${category} (${money(amount)})`).join(', ')}.` : aiResponses.noTransactions;
@@ -685,18 +757,32 @@
       // Add user message
       addMessage(message, true);
       chatInput.value = '';
+      chatHistory.push({ role: 'user', content: message });
 
       // Show typing indicator
       showTyping();
 
-      // Simulate AI response delay
-      setTimeout(() => {
+      fetch('/api/ai/expense-advisor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, history: chatHistory.slice(-7, -1) })
+      }).then(response => {
+        if (!response.ok) throw new Error('Chat request failed');
+        return response.json();
+      }).then(data => {
         const typingDiv = document.getElementById('typingIndicator');
         if (typingDiv) typingDiv.remove();
-        
-        const response = getAIResponse(message);
+
+        const response = data.success && data.message ? data.message : getAIResponse(message);
+        chatHistory.push({ role: 'assistant', content: response });
         addMessage(response);
-      }, 1000);
+      }).catch(() => {
+        const typingDiv = document.getElementById('typingIndicator');
+        if (typingDiv) typingDiv.remove();
+        const response = getAIResponse(message);
+        chatHistory.push({ role: 'assistant', content: response });
+        addMessage(response);
+      });
     }
 
     function handleChatKeypress(e) {

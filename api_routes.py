@@ -5,8 +5,11 @@ API routes for OTP SMS and AI Chat features
 from flask import request, jsonify, session
 from functools import wraps
 import sqlite3
+import json
 from services.otp_service import generate_otp, send_otp, store_otp, verify_otp, delete_otp
 from services.ai_service import chat_with_ai, get_expense_advisor_response, estimate_daily_saving_amount
+from services.forecast_service import forecast_monthly_expense
+from services.historical_transaction_service import historical_response
 
 
 def require_login(f):
@@ -218,8 +221,12 @@ def register_api_routes(app):
         """
         try:
             user = session.get('user')
+            user_id = session.get('user_id')
             data = request.get_json() or {}
             user_message = data.get('message', '').strip()
+            conversation_history = data.get('history', [])
+            if not isinstance(conversation_history, list):
+                conversation_history = []
             
             if not user_message:
                 return jsonify({
@@ -234,7 +241,7 @@ def register_api_routes(app):
                 cur = conn.cursor()
                 
                 # Get user's group and transactions
-                cur.execute('SELECT group_name FROM users WHERE username = ?', (user,))
+                cur.execute('SELECT group_name, monthly_budget FROM users WHERE username = ?', (user,))
                 user_row = cur.fetchone()
                 if not user_row:
                     conn.close()
@@ -244,25 +251,55 @@ def register_api_routes(app):
                     }), 404
                 
                 group_name = user_row['group_name']
+                monthly_budget = user_row['monthly_budget']
                 
-                # Get recent transactions
+                # Keep the chat context scoped to this account. Legacy rows without
+                # user_id may still be shared by the account's group.
                 cur.execute(
                     '''SELECT date, type, amount, category, note 
                        FROM transactions 
-                       WHERE group_name = ? 
-                       ORDER BY date DESC LIMIT 100''',
-                    (group_name,)
+                       WHERE user_id = ? OR (user_id IS NULL AND (group_name = ? OR user = ?))
+                       ORDER BY date DESC''',
+                    (user_id, group_name, user)
                 )
                 
                 transactions = [dict(row) for row in cur.fetchall()]
+                cur.execute(
+                    'SELECT title, target, saved, due_date FROM goals WHERE group_name = ? ORDER BY id DESC',
+                    (group_name,)
+                )
+                goals = [dict(row) for row in cur.fetchall()]
                 conn.close()
             
             except Exception as db_err:
                 print(f"Database error: {db_err}")
                 transactions = []
+                monthly_budget = None
+                goals = []
             
+            forecast = forecast_monthly_expense(transactions, months=1)
+            is_month_comparison = (
+                ('compare' in user_message.lower() or 'than last month' in user_message.lower())
+                and ('month' in user_message.lower())
+            )
+            if not is_month_comparison:
+                historical_result = historical_response(user_message, transactions)
+                if historical_result:
+                    return jsonify({
+                        'success': True,
+                        'message': historical_result,
+                        'model': 'database-calculator'
+                    }), 200
+
+            account_context = (
+                "Authenticated account context from existing database calculations. "
+                f"Monthly budget: {monthly_budget if monthly_budget is not None else 'not set'}. "
+                f"Savings goals: {json.dumps(goals)}. "
+                f"Expense forecast: {json.dumps(forecast)}. "
+                "Use these values only; do not invent missing values."
+            )
             # Get AI response
-            result = get_expense_advisor_response(user_message, transactions)
+            result = get_expense_advisor_response(user_message, transactions, conversation_history, account_context)
             
             if not result.get('success'):
                 return jsonify(result), 500

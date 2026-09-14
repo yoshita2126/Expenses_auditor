@@ -3020,12 +3020,26 @@ def help_support():
         (user_id, group_name, user)
     )
     chat_transactions = [dict(row) for row in cur.fetchall()]
+    cur.execute(
+        """
+        SELECT title, target, saved, due_date
+        FROM goals
+        WHERE group_name = ?
+        ORDER BY id DESC
+        """,
+        (group_name,)
+    )
+    chat_goals = [dict(row) for row in cur.fetchall()]
     conn.close()
+
+    chat_forecast = forecast_monthly_expense(chat_transactions, months=1)
 
     return render_template(
         "help_support.html",
         chat_transactions=json.dumps(chat_transactions),
-        chat_monthly_budget=session.get('monthly_budget')
+        chat_monthly_budget=session.get('monthly_budget'),
+        chat_goals=json.dumps(chat_goals),
+        chat_forecast=json.dumps(chat_forecast)
     )
 
 
